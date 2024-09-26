@@ -42,10 +42,13 @@ def bus_info(num: int) -> discord.Embed:
         for header in table.find('thead').find_all('th'):
             if header not in stops:
                 stops[header.text] = []
-        next_time = None
-        next_stop = None
+        found = False
         for row in table.find('tbody').find_all('tr'):
+            if found:
+                break
             for index, arrival in enumerate(row.find_all('td')):
+                if found:
+                    break
                 if arrival is not None:
                     time_split = arrival.text.split(':')
                     hour = int(time_split[0])
@@ -55,14 +58,9 @@ def bus_info(num: int) -> discord.Embed:
                         hour = hour % 24
                     stop_time = time(hour = hour,minute = minute, second=0)
                     stop = list(stops.keys())[index]
-                    if index == 0 and next_time is None:
-                        next_time = stop_time
-                        next_stop = stop
                     if datetime.now().time() < stop_time:
-                        next_time = stop_time
-                        next_stop = stop
-                    elif datetime.now().time() >= stop_time:
-                        description = f'Next stop: **{next_stop}** at **{next_time.strftime("%I:%M %p")}**'
+                        description = f'Next stop: **{stop}** at **{stop_time.strftime("%I:%M %p")}**'
+                        found = True
                     stops[stop].append(arrival.text)
         bus_url = route_url
         title = schedules[int(num) - 1].text
