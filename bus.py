@@ -50,18 +50,14 @@ def bus_info(num: int) -> discord.Embed:
                 if found:
                     break
                 if arrival is not None:
-                    time_split = arrival.text.split(':')
-                    hour = int(time_split[0])
-                    minute = int(time_split[1][:2])
-                    if time_split[1][3:] == 'pm':
-                        hour += 12
-                        hour = hour % 24
-                    stop_time = time(hour = hour,minute = minute, second=0)
+                    stop_time = datetime.strptime(arrival.text.upper(), '%I:%M %p').time()
                     stop = list(stops.keys())[index]
                     if datetime.now().time() < stop_time:
                         description = f'Next stop: **{stop}** at **{stop_time.strftime("%I:%M %p")}**'
                         found = True
                     stops[stop].append(arrival.text)
+        if not found:
+            description = 'This line has no further stops today'
         bus_url = route_url
         title = schedules[int(num) - 1].text
 
