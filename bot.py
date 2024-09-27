@@ -25,13 +25,13 @@ async def on_ready():
     await bot.change_presence(status=discord.Status.online)
 
 
-@bot.command()
+@bot.hybrid_command(help="Displays current headline news")
 async def news(ctx):
     message = await ctx.send(embed=get_news_embed(), view=NewsView(timeout=get_timeout()))
     NewsView.message = message
 
 
-@bot.command()
+@bot.command(hidden=True)
 async def timeout(ctx, length: int):
     try:
         if isinstance(int(length), int):
@@ -45,7 +45,7 @@ async def timeout(ctx, length: int):
         await ctx.send('Invalid Time Period')
 
 
-@bot.hybrid_command()
+@bot.hybrid_command(hidden=True)
 async def sync(ctx):
     try:
         synced = await ctx.bot.tree.sync(guild=ctx.guild)
@@ -54,10 +54,15 @@ async def sync(ctx):
         await ctx.send('Unable to sync commands!')
 
 
-@bot.command()
-async def eat(ctx, side: str, type: str):
-    options = [location for location in DINING_LOCATIONS[side] if location in DINING_LOCATIONS[type]]
-    await ctx.send("Eat at " + choice(options))
+@bot.command(help="Helps decide where to eat on campus\nUsage: eat {dorms/academic} {breakfast/lunch/dinner}", usage="eat {dorms/academic} {breakfast/lunch/dinner}")
+async def eat(ctx,
+              side:str =commands.Parameter(name='side', kind=commands.Parameter.KEYWORD_ONLY, description='Side of campus', default=None),
+              type:str =commands.Parameter(name='type', kind=commands.Parameter.KEYWORD_ONLY, description='Type of food', default=None)):
+    if side is None or type is None:
+        await ctx.send(f'Usage: {eat.usage}')
+    else:
+        options = [location for location in DINING_LOCATIONS[side] if location in DINING_LOCATIONS[type]]
+        await ctx.send("Eat at " + choice(options))
 
 
 @tasks.loop(time=time(hour=8, minute=00))
@@ -65,13 +70,13 @@ async def busTimer(ctx):
     await ctx.send(embed=bus_alert())
 
 
-@bot.command()
+@bot.command(help="Displays any current bus alerts")
 async def bus(ctx):
     await ctx.send(embed=bus_alert())
 
 
-@bot.command(aliases=['sched'])
-async def schedule(ctx, num: int = 0):
+@bot.command(help="Provides links to bus schedules, specify number for stop info", aliases=['sched'])
+async def schedule(ctx, num:int =commands.Parameter(name = 'num', kind=commands.Parameter.KEYWORD_ONLY, description='Schedule number', default = 0)):
     await ctx.send(embed=bus_info(num))
 
 if __name__ == '__main__':
